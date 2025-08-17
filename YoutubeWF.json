@@ -1,0 +1,181 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "databaseId": {
+          "__rl": true,
+          "value": "24c7a661-a2f4-804c-8722-d49b7671f994",
+          "mode": "list",
+          "cachedResultName": "Youtube URLs",
+          "cachedResultUrl": "https://www.notion.so/24c7a661a2f4804c8722d49b7671f994"
+        }
+      },
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a46bec52-2ddf-4d11-b3b9-e32127a0af8d",
+      "name": "Notion Trigger",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {
+        "notionApi": {
+          "id": "xWb2K3faEhDfDEpk",
+          "name": "Notion account"
+        }
+      },
+      "notes": "Grab the last youtube URL from the table"
+    },
+    {
+      "parameters": {
+        "command": "=#Update this to something universal\nraw_path=/Users/izana/Me/speeches/fetched_vids\ncd raw_path\n\nyt-dlp \"{{ $json.URL }}\" --no-mtime -f \"bv*+ba/b\" --recode-video mp4 -o \"./{{ $json.Title }}.%(ext)s\"\n\ncurl -X POST https://api.elevenlabs.io/v1/dubbing \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" \\\n     -F file=\"./{{ $json.Title }}.mp4\" \\\n     -F target_lang=\"ja\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        96,
+        240
+      ],
+      "id": "6f5cecd9-0aa3-41e1-91ab-aee006817e9f",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "command": "=curl -X POST https://api.elevenlabs.io/v1/dubbing \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" \\\n     -F source_url=\"{{ $json.URL }}\" \\\n     -F name=\"{{ $json.Title }}\" \\\n     -F dubbing_studio=true \\\n     -F target_lang=\"{{ $json.Language }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f2b793fc-3c2d-4c48-a5d6-b301cbc5d552",
+      "name": "Create video project"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "team@translatedspeeches.com",
+        "subject": "=Approval Required for {{ $('Notion Trigger').item.json.Title }} Dubbing Project",
+        "message": "=Hello,\n\nA new video has been submitted for approval. Please review the {{ $('Notion Trigger').item.json.Title }} project in Elevenlabs and make any necessary edits. Once everything looks good, approve this email to move the project along. \n\nVisit https://elevenlabs.io/app/dubbing\n\nBest Regards,\n\nYour Robot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1c03ed6c-801f-4c5a-aac3-f76e3b253da8",
+      "name": "Validation Confirmation",
+      "webhookId": "e9e6bb9e-5971-4d0a-a07b-4f9a9bb2cd32",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3hAgLvXwURAvxS8b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "dfcef731-1e9e-400f-9d65-ba58327b3cf9",
+      "name": "Upload Speech"
+    },
+    {
+      "parameters": {
+        "command": "=curl https://api.elevenlabs.io/v1/dubbing/{{ $('Create video project').item.json.stdout .parseJson().dubbing_id}}/audio/{{ $('Notion Trigger').item.json.Language }} \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" "
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "09f47099-8df6-46ce-89b0-36be6da808d7",
+      "name": "Get Dubbed Video"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Notion Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create video project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        []
+      ]
+    },
+    "Create video project": {
+      "main": [
+        [
+          {
+            "node": "Validation Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Get Dubbed Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Dubbed Video": {
+      "main": [
+        [
+          {
+            "node": "Upload Speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d936e87d-6ba0-461b-80ca-c2ecdb7db0bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b59b699fd1ded0cb626d99d6dd1b0d373f89405ae24264336ffe261daffa1fdd"
+  },
+  "id": "VPCDHNHMSrOi4JdG",
+  "tags": []
+}
