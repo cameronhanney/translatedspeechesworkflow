@@ -1,0 +1,90 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {
+              "prompt": "A website called translatedspeeches.com which uses artificial intelligence to dub and translate speeches is uploading a speech called Che Guevara's 1964 Speech at the UN in English - Patria o Muerte 🇨🇺 by Che Guevara. Write a concise summary of the following to be put as a description of the speech. Include historical context of the speech, time period, involved countries, and the speaker. This summary will be used as a description to the video on platforms including Youtube, translatedspeeches.com, and Spotify. Additionally, write a second summary that is no greater than 145 characters which will be used as a caption on short form platforms like Tiktok, Instagram Reels, Youtube Shorts, and more:\n\n\n\"{text}\"\n\n\nCONCISE SUMMARY:"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2843b6c8-2c38-4b79-9f44-f7649df68134",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        16
+      ],
+      "id": "f73a6480-6337-4487-80bb-1aef6cf47bb3",
+      "name": "When chat message received",
+      "webhookId": "e7da5f1b-2016-47dc-840a-7714c32a15f0"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        208
+      ],
+      "id": "a3072471-49e1-44a1-aa67-587c380c74ed",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OgiXFdGbwMzMtqNd",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d30e6c2d54dd024c00103ea70695ebb0b081cf337885ec765323a6da1ff8f541"
+  }
+}
