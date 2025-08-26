@@ -1,5 +1,5 @@
 {
-  "name": "My workflow",
+  "name": "YoutubeWorkflow",
   "nodes": [
     {
       "parameters": {
@@ -38,20 +38,7 @@
     },
     {
       "parameters": {
-        "command": "=#Update this to something universal\nraw_path=/Users/izana/Me/speeches/fetched_vids\ncd raw_path\n\nyt-dlp \"{{ $json.URL }}\" --no-mtime -f \"bv*+ba/b\" --recode-video mp4 -o \"./{{ $json.Title }}.%(ext)s\"\n\ncurl -X POST https://api.elevenlabs.io/v1/dubbing \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" \\\n     -F file=\"./{{ $json.Title }}.mp4\" \\\n     -F target_lang=\"ja\""
-      },
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
-      "position": [
-        96,
-        240
-      ],
-      "id": "6f5cecd9-0aa3-41e1-91ab-aee006817e9f",
-      "name": "Execute Command"
-    },
-    {
-      "parameters": {
-        "command": "=curl -X POST https://api.elevenlabs.io/v1/dubbing \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" \\\n     -F source_url=\"{{ $json.URL }}\" \\\n     -F name=\"{{ $json.Title }}\" \\\n     -F dubbing_studio=true \\\n     -F target_lang=\"{{ $json.Language }}\""
+        "command": "=curl -X POST https://api.elevenlabs.io/v1/dubbing \\\n     -H \"xi-api-key: sk_e65c857331a7a90bb2bb94bbe2be4c5d7697b60f6460c6f6\" \\\n     -F source_url=\"{{ $json.URL }}\" \\\n     -F name=\"{{ $json.Title }}\" \\\n     -F dubbing_studio=true \\\n     -F target_lang=\"{{ $json.Language }}\""
       },
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -73,8 +60,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        416,
-        0
+        -32,
+        352
       ],
       "id": "1c03ed6c-801f-4c5a-aac3-f76e3b253da8",
       "name": "Validation Confirmation",
@@ -90,29 +77,121 @@
       "parameters": {
         "resource": "video",
         "operation": "upload",
-        "options": {}
+        "title": "={{ $('Notion Trigger').item.json.Title }}",
+        "regionCode": "US",
+        "options": {
+          "description": "={{ $json.output.text }}"
+        }
       },
       "type": "n8n-nodes-base.youTube",
       "typeVersion": 1,
       "position": [
-        832,
+        1040,
         0
       ],
       "id": "dfcef731-1e9e-400f-9d65-ba58327b3cf9",
-      "name": "Upload Speech"
+      "name": "Upload Speech",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "gVrPsRvr9GG1l3do",
+          "name": "YouTube account"
+        }
+      },
+      "disabled": true
     },
     {
       "parameters": {
-        "command": "=curl https://api.elevenlabs.io/v1/dubbing/{{ $('Create video project').item.json.stdout .parseJson().dubbing_id}}/audio/{{ $('Notion Trigger').item.json.Language }} \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" "
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {
+              "combineMapPrompt": "=Write a concise summary of the following:\n\n{{ $json.data }}\n\n\nCONCISE SUMMARY: ",
+              "prompt": "=A website called translatedspeeches.com which uses artificial intelligence to dub and translate speeches is uploading a video called {{ $('Notion Trigger').item.json.Title }} in the language {{ $('Notion Trigger').item.json.Language }}. Write a concise summary of the following to be put as a description of the speech. Include historical context of the speech, time period, involved countries, and the speaker. This summary will be used as a description to the video on platforms including Youtube, translatedspeeches.com, and Spotify. Additionally, write a second summary that is no greater than 145 characters which will be used as a caption on short form platforms like Tiktok, Instagram Reels, Youtube Shorts, and more:\n\n\n\"{text}\"\n\n\nCONCISE SUMMARY: "
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        0
+      ],
+      "id": "328bca23-bfdd-40bd-b130-7d564c50a38a",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        528
+      ],
+      "id": "98a7a443-9ab4-4223-bc92-e5c9ee1de368",
+      "name": "When chat message received",
+      "webhookId": "e7da5f1b-2016-47dc-840a-7714c32a15f0"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        304
+      ],
+      "id": "eb15c732-ecec-4d82-ac3d-e5202e32ddfb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wORM391xS9mpChja",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=#Update this to something universal\nraw_path=/Users/izana/Me/speeches/fetched_vids\ncd raw_path\n\nyt-dlp \"{{ $json.URL }}\" --no-mtime -f \"bv*+ba/b\" --recode-video mp4 -o \"./{{ $json.Title }}.%(ext)s\"\n\ncurl -X POST https://api.elevenlabs.io/v1/dubbing \\\n     -H \"xi-api-key: sk_19c38eb6968f58c5de3ba4298f833bb1fb73d001eac53bbe\" \\\n     -F file=\"./{{ $json.Title }}.mp4\" \\\n     -F target_lang=\"ja\""
       },
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        624,
+        -32,
+        192
+      ],
+      "id": "6f5cecd9-0aa3-41e1-91ab-aee006817e9f",
+      "name": "Download Video Mp4"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.elevenlabs.io/v1/dubbing/{{ $json.stdout.parseJson().dubbing_id }}/transcript/{{ $('Notion Trigger').item.json.Language}}\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "sk_e65c857331a7a90bb2bb94bbe2be4c5d7697b60f6460c6f6"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
         0
       ],
-      "id": "09f47099-8df6-46ce-89b0-36be6da808d7",
-      "name": "Get Dubbed Video"
+      "id": "f76a95bd-83c0-46ab-9602-e40570e19f51",
+      "name": "Get Speech Transcript"
     }
   ],
   "pinData": {},
@@ -128,16 +207,11 @@
         ]
       ]
     },
-    "Execute Command": {
-      "main": [
-        []
-      ]
-    },
     "Create video project": {
       "main": [
         [
           {
-            "node": "Validation Confirmation",
+            "node": "Get Speech Transcript",
             "type": "main",
             "index": 0
           }
@@ -146,16 +220,42 @@
     },
     "Validation Confirmation": {
       "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
         [
           {
-            "node": "Get Dubbed Video",
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video Mp4": {
+      "main": [
+        []
+      ]
+    },
+    "Get Speech Transcript": {
+      "main": [
+        [
+          {
+            "node": "Summarization Chain",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get Dubbed Video": {
+    "Summarization Chain": {
       "main": [
         [
           {
@@ -171,7 +271,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "d936e87d-6ba0-461b-80ca-c2ecdb7db0bb",
+  "versionId": "eb3b05de-b993-42a7-a76a-35433521c974",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "b59b699fd1ded0cb626d99d6dd1b0d373f89405ae24264336ffe261daffa1fdd"
