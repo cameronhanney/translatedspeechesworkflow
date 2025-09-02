@@ -86,7 +86,7 @@
       "type": "n8n-nodes-base.youTube",
       "typeVersion": 1,
       "position": [
-        1040,
+        1456,
         0
       ],
       "id": "dfcef731-1e9e-400f-9d65-ba58327b3cf9",
@@ -113,7 +113,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainSummarization",
       "typeVersion": 2.1,
       "position": [
-        688,
+        1104,
         0
       ],
       "id": "328bca23-bfdd-40bd-b130-7d564c50a38a",
@@ -145,7 +145,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        688,
+        1104,
         304
       ],
       "id": "eb15c732-ecec-4d82-ac3d-e5202e32ddfb",
@@ -172,7 +172,7 @@
     },
     {
       "parameters": {
-        "url": "=https://api.elevenlabs.io/v1/dubbing/{{ $json.stdout.parseJson().dubbing_id }}/transcript/{{ $('Notion Trigger').item.json.Language}}\n",
+        "url": "=https://api.elevenlabs.io/v1/dubbing/{{ $('Create video project').item.json.stdout.parseJson().dubbing_id}}/transcript/{{ $('Notion Trigger').item.json.Language}}\n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -187,11 +187,28 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        432,
+        720,
         0
       ],
       "id": "f76a95bd-83c0-46ab-9602-e40570e19f51",
-      "name": "Get Speech Transcript"
+      "name": "Get Speech Transcript",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Retry acquiring the project."
+    },
+    {
+      "parameters": {
+        "command": "sleep 300"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        464,
+        0
+      ],
+      "id": "71fef651-627a-47f0-bfe1-e63569d6ea7b",
+      "name": "Sleep while project completes"
     }
   ],
   "pinData": {},
@@ -211,7 +228,7 @@
       "main": [
         [
           {
-            "node": "Get Speech Transcript",
+            "node": "Sleep while project completes",
             "type": "main",
             "index": 0
           }
@@ -265,13 +282,24 @@
           }
         ]
       ]
+    },
+    "Sleep while project completes": {
+      "main": [
+        [
+          {
+            "node": "Get Speech Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "eb3b05de-b993-42a7-a76a-35433521c974",
+  "versionId": "d8b82dc2-87af-4287-8242-9f8a134ff7a3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "b59b699fd1ded0cb626d99d6dd1b0d373f89405ae24264336ffe261daffa1fdd"
